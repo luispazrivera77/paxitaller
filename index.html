@@ -98,6 +98,20 @@
   const formContainer = document.getElementById('formContainer');
   const results = document.getElementById('results');
 
+  filterField.onchange = () => {
+  const campo = filterField.value;
+  if (!campo) return;
+  let lista = [...registros];
+  if (campo.toLowerCase().includes('fecha ingreso')) {
+    lista.sort((a, b) => {
+      const da = new Date(a[campo] || 0);
+      const db = new Date(b[campo] || 0);
+      return db - da;
+    });
+  }
+  mostrarResultados(lista);
+};
+
   // Eventos UI base
   menuToggle.onclick = () => menu.classList.toggle('open');
   viewAllBtn.onclick = () => mostrarResultados(registros);
