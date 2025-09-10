@@ -115,7 +115,10 @@
   // Eventos UI base
   menuToggle.onclick = () => menu.classList.toggle('open');
   viewAllBtn.onclick = () => mostrarResultados(registros);
-  newRecordBtn.onclick = () => mostrarFormulario(camposBase, null);
+  newRecordBtn.onclick = () => {
+  results.innerHTML = ''; // Limpia la pantalla
+  mostrarFormulario(camposBase, null);
+};
 
   // Inicial
   actualizarFiltro();
