@@ -5,156 +5,297 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MI TALLER MECÁNICO</title>
 <style>
-  body { background-color: #0a0a0a; color: #b0bec5; font-family: 'Segoe UI', sans-serif; margin: 0; }
-  header { text-align: center; padding: 20px; background-color: #0d1b2a; }
-  h1 { margin: 0; color: #00bcd4; }
-  main { padding: 20px; max-width: 800px; margin: auto; }
-  input, select { background-color: #0d1b2a; border: 1px solid #00bcd4; color: white; padding: 8px; margin: 5px 0; width: 100%; }
-  button { background-color: #00bcd4; border: none; padding: 8px 12px; color: white; cursor: pointer; margin: 5px 5px 5px 0; }
-  button:hover { background-color: #0097a7; }
-  .record { border: 1px solid #00bcd4; padding: 10px; margin: 10px 0; }
-  #menu { position: fixed; top: 0; left: 0; background-color: #0d1b2a; height: 100%; width: 250px; transform: translateX(-100%); transition: transform 0.3s ease; padding: 20px; }
+  :root {
+    --bg: #0a0a0a;
+    --panel: #0d1b2a;
+    --accent: #00bcd4;
+    --accent-hover: #0097a7;
+    --text: #b0bec5;
+    --border: #00bcd4;
+  }
+  * { box-sizing: border-box; }
+  body { background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; }
+  header { text-align: center; padding: 20px; background-color: var(--panel); }
+  h1 { margin: 0; color: var(--accent); font-weight: 600; }
+  main { padding: 20px; max-width: 920px; margin: auto; }
+  input, select, textarea {
+    background-color: var(--panel); border: 1px solid var(--border);
+    color: #fff; padding: 10px; margin: 6px 0; width: 100%; border-radius: 6px;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  button {
+    background-color: var(--accent); border: none; padding: 9px 14px;
+    color: #fff; cursor: pointer; margin: 6px 6px 6px 0; border-radius: 6px;
+  }
+  button:hover { background-color: var(--accent-hover); }
+  .secondary { background: transparent; border: 1px solid var(--border); color: #fff; }
+  .record { border: 1px solid var(--border); padding: 12px; margin: 12px 0; border-radius: 8px; background: rgba(13,27,42,0.5); }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 6px 10px; align-items: start; }
+  .kv b { color: #e0f7fa; font-weight: 600; }
+  #menu {
+    position: fixed; top: 0; left: 0; background-color: var(--panel);
+    height: 100%; width: 270px; transform: translateX(-100%);
+    transition: transform 0.3s ease; padding: 20px; box-shadow: 2px 0 12px rgba(0,0,0,0.4);
+  }
   #menu.open { transform: translateX(0); }
-  #menuToggle { position: fixed; top: 10px; left: 10px; background: none; border: none; font-size: 24px; color: #00bcd4; cursor: pointer; }
+  #menuToggle {
+    position: fixed; top: 10px; left: 10px; background: none; border: 1px solid var(--border);
+    font-size: 18px; color: var(--accent); cursor: pointer; padding: 6px 10px; border-radius: 6px;
+    backdrop-filter: blur(3px);
+  }
   .hidden { display: none; }
+  .row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (max-width: 720px) { .row { grid-template-columns: 1fr; } #menu { width: 86vw; } }
+  .hint { color: #8aa; font-size: 12px; margin: 8px 0 0; }
 </style>
 </head>
 <body>
 
-<button id="menuToggle">☰</button>
-<div id="menu">
-  <h3>Filtrar por</h3>
-  <select id="filterField"></select>
+<button id="menuToggle">☰ Menú</button>
+<aside id="menu" aria-label="Menú lateral">
+  <h3 style="margin-top:0;">Filtrar por</h3>
+  <select id="filterField" title="Campo para filtrar"></select>
   <button id="viewAllBtn" style="margin-top:10px;">Ver registros ingresados</button>
-  <p style="margin-top:20px;">Desarrollado por LPaz</p>
-</div>
+  <p class="hint">Usa el buscador para filtrar en vivo por cualquier campo.</p>
+  <hr style="border-color:#114; opacity:.3;">
+  <p style="margin-top:14px;">Desarrollado por LPaz</p>
+</aside>
 
 <header>
   <h1>MI TALLER MECÁNICO</h1>
 </header>
 
 <main>
-  <input type="text" id="search" placeholder="Buscar registro...">
+  <input type="text" id="search" placeholder="Buscar registro..." autocomplete="off" />
   <button id="newRecordBtn">Nuevo registro</button>
+
   <div id="formContainer" class="hidden"></div>
   <div id="results"></div>
 </main>
 
 <script>
-const registros = [];
-const camposBase = ["Cliente","Trabajo","Fecha ingreso","Presupuesto total"];
-const camposExtra = ["RUT","Teléfono","Correo","Dirección","Marca","Modelo","Año","Patente","N° chasis/VIN","Kilometraje","Color","Combustible","Transmisión","Repuestos","Descripción falla","Diagnóstico","Trabajos a realizar","Costo repuestos","Costo mano de obra","Observaciones","Fecha entrega","Estado trabajo","Abono","Saldo pendiente","Forma de pago","Fecha pago","Garantía","Notas internas"];
+(function(){
+  // Estado
+  const registros = [];
+  const camposBase = ["Cliente","Trabajo","Fecha ingreso","Presupuesto total"];
+  const camposExtra = [
+    "RUT","Teléfono","Correo","Dirección","Marca","Modelo","Año","Patente","N° chasis/VIN",
+    "Kilometraje","Color","Combustible","Transmisión","Repuestos","Descripción falla","Diagnóstico",
+    "Trabajos a realizar","Costo repuestos","Costo mano de obra","Observaciones","Fecha entrega",
+    "Estado trabajo","Abono","Saldo pendiente","Forma de pago","Fecha pago","Garantía","Notas internas"
+  ];
 
-document.getElementById('menuToggle').onclick = () => document.getElementById('menu').classList.toggle('open');
-document.getElementById('newRecordBtn').onclick = () => mostrarFormulario(camposBase, null);
-document.getElementById('viewAllBtn').onclick = () => mostrarResultados(registros);
+  // Elementos
+  const menu = document.getElementById('menu');
+  const menuToggle = document.getElementById('menuToggle');
+  const filterField = document.getElementById('filterField');
+  const viewAllBtn = document.getElementById('viewAllBtn');
+  const newRecordBtn = document.getElementById('newRecordBtn');
+  const search = document.getElementById('search');
+  const formContainer = document.getElementById('formContainer');
+  const results = document.getElementById('results');
 
-function mostrarFormulario(campos, idx) {
-  const form = document.getElementById('formContainer');
-  form.innerHTML = '';
-  campos.forEach(campo => {
-    const input = document.createElement('input');
-    input.placeholder = campo;
-    input.dataset.campo = campo;
-    if(campo.toLowerCase().includes('fecha')) input.type = 'date';
-    else if(campo.toLowerCase().includes('costo') || campo.toLowerCase().includes('presupuesto') || campo.toLowerCase().includes('abono') || campo.toLowerCase().includes('saldo'))
-      input.type = 'number';
-    else input.type = 'text';
-    if(idx !== null) input.value = registros[idx][campo] || '';
-    form.appendChild(input);
-  });
-  const saveBtn = document.createElement('button');
-  saveBtn.textContent = 'Guardar';
-  saveBtn.onclick = () => {
-    const registro = idx !== null ? registros[idx] : {};
-    form.querySelectorAll('input').forEach(inp => registro[inp.dataset.campo] = inp.value);
-    if (idx === null) {
-      registros.push(registro);
-      mostrarResultados([registro]); // solo el nuevo
-    } else {
-      mostrarResultados(registros); // edición: todos
-    }
-    form.classList.add('hidden');
-    actualizarFiltro();
-  };
-  const cancelBtn = document.createElement('button');
-  cancelBtn.textContent = 'Cancelar';
-  cancelBtn.onclick = () => form.classList.add('hidden');
-  form.appendChild(saveBtn);
-  form.appendChild(cancelBtn);
-  form.classList.remove('hidden');
-}
+  // UI: Menú
+  menuToggle.onclick = () => menu.classList.toggle('open');
+  viewAllBtn.onclick = () => mostrarResultados(registros);
 
-function mostrarResultados(lista) {
-  const cont = document.getElementById('results');
-  cont.innerHTML = '';
-  if(lista.length === 0) {
-    cont.innerHTML = '<p>No hay registros para mostrar.</p>';
-    return;
-  }
-  lista.forEach((reg, idx) => {
-    const div = document.createElement('div');
-    div.className = 'record';
-    div.innerHTML = Object.entries(reg).map(([k,v]) => `<strong>${k}:</strong> ${v}`).join('<br>');
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Editar';
-    editBtn.onclick = () => mostrarFormulario(Object.keys(reg), registros.indexOf(reg));
-    const delBtn = document.createElement('button');
-    delBtn.textContent = 'Eliminar';
-    delBtn.onclick = () => { registros.splice(registros.indexOf(reg),1); mostrarResultados(registros); actualizarFiltro(); };
-    const addFieldBtn = document.createElement('button');
-    addFieldBtn.textContent = 'Incluir nuevos campos';
-    addFieldBtn.onclick = () => elegirCamposExtra(registros.indexOf(reg));
+  // Crear nuevo registro (campos base)
+  newRecordBtn.onclick = () => mostrarFormulario(camposBase, null);
+
+  // Formulario dinámico
+  function mostrarFormulario(campos, idx) {
+    formContainer.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'row';
+
+    campos.forEach(campo => {
+      const wrap = document.createElement('div');
+      const input = document.createElement(
+        campo.toLowerCase().includes('trabajos') || campo.toLowerCase().includes('descripción') || campo.toLowerCase().includes('diagnóstico') || campo.toLowerCase().includes('observaciones') || campo.toLowerCase().includes('notas')
+          ? 'textarea' : 'input'
+      );
+      input.placeholder = campo;
+      input.dataset.campo = campo;
+
+      if (!['textarea'].includes(input.tagName.toLowerCase())) {
+        if (campo.toLowerCase().includes('fecha')) input.type = 'date';
+        else if (
+          campo.toLowerCase().includes('costo') ||
+          campo.toLowerCase().includes('presupuesto') ||
+          campo.toLowerCase().includes('abono') ||
+          campo.toLowerCase().includes('saldo')
+        ) input.type = 'number';
+        else input.type = 'text';
+      }
+
+      if (idx !== null) input.value = registros[idx][campo] || '';
+      wrap.appendChild(input);
+      grid.appendChild(wrap);
+    });
+
+    const actions = document.createElement('div');
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Guardar';
     const cancelBtn = document.createElement('button');
     cancelBtn.textContent = 'Cancelar';
-    cancelBtn.onclick = () => cont.innerHTML = '';
-    div.appendChild(document.createElement('br'));
-    div.appendChild(editBtn);
-    div.appendChild(delBtn);
-    div.appendChild(addFieldBtn);
-    div.appendChild(cancelBtn);
-    cont.appendChild(div);
-  });
-}
+    cancelBtn.className = 'secondary';
 
-function elegirCamposExtra(idx) {
-  const form = document.getElementById('formContainer');
-  form.innerHTML = '<p>Seleccione campos adicionales:</p>';
-  const disponibles = camposExtra.filter(c => !(c in registros[idx]));
-  disponibles.forEach(campo => {
-    const chk = document.createElement('input');
-    chk.type = 'checkbox';
-    chk.value = campo;
-    const lbl = document.createElement('label');
-    lbl.textContent = campo;
-    form.appendChild(chk);
-    form.appendChild(lbl);
-    form.appendChild(document.createElement('br'));
-  });
-  const addBtn = document.createElement('button');
-  addBtn.textContent = 'Agregar seleccionados';
-  addBtn.onclick = () => {
-    const seleccionados = Array.from(form.querySelectorAll('input[type=checkbox]:checked')).map(c => c.value);
-    seleccionados.forEach(campo => registros[idx][campo] = '');
-    mostrarFormulario(Object.keys(registros[idx]), idx);
+    saveBtn.onclick = () => {
+      const registro = idx !== null ? registros[idx] : {};
+      formContainer.querySelectorAll('input, textarea').forEach(inp => registro[inp.dataset.campo] = inp.value);
+      if (idx === null) {
+        registros.push(registro);
+        mostrarResultados([registro]); // Solo el recién ingresado
+      } else {
+        mostrarResultados(registros); // En edición, mostrar todos
+      }
+      formContainer.classList.add('hidden');
+      actualizarFiltro();
+    };
+
+    cancelBtn.onclick = () => formContainer.classList.add('hidden');
+
+    actions.appendChild(saveBtn);
+    actions.appendChild(cancelBtn);
+
+    formContainer.appendChild(grid);
+    formContainer.appendChild(actions);
+    formContainer.classList.remove('hidden');
+  }
+
+  // Agregar campos extra a un registro
+  function elegirCamposExtra(idx) {
+    formContainer.innerHTML = '<p>Seleccione campos adicionales:</p>';
+    const disponibles = camposExtra.filter(c => !(c in registros[idx]));
+    if (disponibles.length === 0) {
+      const p = document.createElement('p');
+      p.textContent = 'No hay campos disponibles para agregar.';
+      formContainer.appendChild(p);
+    } else {
+      disponibles.forEach(campo => {
+        const line = document.createElement('div');
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.value = campo;
+        const lbl = document.createElement('label');
+        lbl.textContent = ' ' + campo;
+        line.appendChild(chk);
+        line.appendChild(lbl);
+        formContainer.appendChild(line);
+      });
+    }
+
+    const addBtn = document.createElement('button');
+    addBtn.textContent = 'Agregar seleccionados';
+    addBtn.onclick = () => {
+      const seleccionados = Array.from(formContainer.querySelectorAll('input[type=checkbox]:checked')).map(c => c.value);
+      seleccionados.forEach(campo => registros[idx][campo] = '');
+      mostrarFormulario(Object.keys(registros[idx]), idx);
+    };
+
+    const backBtn = document.createElement('button');
+    backBtn.textContent = 'Volver atrás';
+    backBtn.className = 'secondary';
+    backBtn.onclick = () => formContainer.classList.add('hidden');
+
+    formContainer.appendChild(addBtn);
+    formContainer.appendChild(backBtn);
+    formContainer.classList.remove('hidden');
+  }
+
+  // Listado de resultados
+  function mostrarResultados(lista) {
+    results.innerHTML = '';
+    if (!lista || lista.length === 0) {
+      results.innerHTML = '<p>No hay registros para mostrar.</p>';
+      return;
+    }
+
+    lista.forEach(reg => {
+      const idx = registros.indexOf(reg);
+      const card = document.createElement('div');
+      card.className = 'record';
+
+      const kv = document.createElement('div');
+      kv.className = 'kv';
+      Object.entries(reg).forEach(([k, v]) => {
+        const keyEl = document.createElement('b');
+        keyEl.textContent = k + ':';
+        const valEl = document.createElement('div');
+        valEl.textContent = v ?? '';
+        kv.appendChild(keyEl);
+        kv.appendChild(valEl);
+      });
+      card.appendChild(kv);
+
+      const actions = document.createElement('div');
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Editar';
+      editBtn.onclick = () => mostrarFormulario(Object.keys(reg), idx);
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Eliminar';
+      delBtn.onclick = () => {
+        if (!confirm('¿Eliminar este registro?')) return;
+        registros.splice(idx, 1);
+        mostrarResultados(registros);
+        actualizarFiltro();
+      };
+
+      const addFieldBtn = document.createElement('button');
+      addFieldBtn.textContent = 'Incluir nuevos campos';
+      addFieldBtn.onclick = () => elegirCamposExtra(idx);
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancelar';
+      cancelBtn.className = 'secondary';
+      cancelBtn.onclick = () => { results.innerHTML = ''; };
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+      actions.appendChild(addFieldBtn);
+      actions.appendChild(cancelBtn);
+
+      card.appendChild(document.createElement('br'));
+      card.appendChild(actions);
+      results.appendChild(card);
+    });
+  }
+
+  // Búsqueda en vivo
+  search.oninput = e => {
+    const term = e.target.value.toLowerCase().trim();
+    if (registros.length === 0) {
+      results.innerHTML = '<p>No hay registros.</p>';
+      return;
+    }
+    if (!term) {
+      // Vacío: mostrar todos para facilitar exploración
+      mostrarResultados(registros);
+      return;
+    }
+    const filtered = registros.filter(r =>
+      Object.values(r).some(val => (val ?? '').toString().toLowerCase().includes(term))
+    );
+    mostrarResultados(filtered);
   };
-  const backBtn = document.createElement('button');
-  backBtn.textContent = 'Volver atrás';
-  backBtn.onclick = () => form.classList.add('hidden');
-  form.appendChild(addBtn);
-  form.appendChild(backBtn);
-  form.classList.remove('hidden');
-}
 
-document.getElementById('search').oninput = e => {
-  const term = e.target.value.toLowerCase();
-  if (registros.length === 0) {
-    document.getElementById('results').innerHTML = '<p>No hay registros.</p>';
-    return;
+  // Poblar selector de filtro con campos de todos los registros
+  function actualizarFiltro() {
+    filterField.innerHTML = '';
+    const campos = new Set();
+    registros.forEach(r => Object.keys(r).forEach(k => campos.add(k)));
+    [...campos].sort().forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      filterField.appendChild(opt);
+    });
   }
-  if (!term) {
-    mostrarResultados(registros);
-    return;
-  }
-  const results = registros.filter(r =>
-    Object.values(r).some(val =>
+
+  // Inicial
+  actualizarFiltro();
+})();
+</script>
+</body>
+</html>
