@@ -68,9 +68,13 @@ function mostrarFormulario(campos, idx) {
   saveBtn.onclick = () => {
     const registro = idx !== null ? registros[idx] : {};
     form.querySelectorAll('input').forEach(inp => registro[inp.dataset.campo] = inp.value);
-    if(idx === null) registros.push(registro);
+    if (idx === null) {
+      registros.push(registro);
+      mostrarResultados([registro]); // solo el nuevo
+    } else {
+      mostrarResultados(registros); // edición: todos
+    }
     form.classList.add('hidden');
-    mostrarResultados(registros);
     actualizarFiltro();
   };
   const cancelBtn = document.createElement('button');
@@ -94,13 +98,13 @@ function mostrarResultados(lista) {
     div.innerHTML = Object.entries(reg).map(([k,v]) => `<strong>${k}:</strong> ${v}`).join('<br>');
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Editar';
-    editBtn.onclick = () => mostrarFormulario(Object.keys(reg), idx);
+    editBtn.onclick = () => mostrarFormulario(Object.keys(reg), registros.indexOf(reg));
     const delBtn = document.createElement('button');
     delBtn.textContent = 'Eliminar';
-    delBtn.onclick = () => { registros.splice(idx,1); mostrarResultados(registros); actualizarFiltro(); };
+    delBtn.onclick = () => { registros.splice(registros.indexOf(reg),1); mostrarResultados(registros); actualizarFiltro(); };
     const addFieldBtn = document.createElement('button');
     addFieldBtn.textContent = 'Incluir nuevos campos';
-    addFieldBtn.onclick = () => elegirCamposExtra(idx);
+    addFieldBtn.onclick = () => elegirCamposExtra(registros.indexOf(reg));
     const cancelBtn = document.createElement('button');
     cancelBtn.textContent = 'Cancelar';
     cancelBtn.onclick = () => cont.innerHTML = '';
@@ -154,24 +158,3 @@ document.getElementById('search').oninput = e => {
   }
   const results = registros.filter(r =>
     Object.values(r).some(val =>
-      val && val.toString().toLowerCase().includes(term)
-    )
-  );
-  mostrarResultados(results);
-};
-
-function actualizarFiltro() {
-  const sel = document.getElementById('filterField');
-  sel.innerHTML = '';
-  const campos = new Set();
-  registros.forEach(r => Object.keys(r).forEach(k => campos.add(k)));
-  campos.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = c;
-    sel.appendChild(opt);
-  });
-}
-</script>
-</body>
-</html>
