@@ -98,17 +98,25 @@
   const formContainer = document.getElementById('formContainer');
   const results = document.getElementById('results');
 
-  filterField.onchange = () => {
+filterField.onchange = () => {
   const campo = filterField.value;
   if (!campo) return;
+
   let lista = [...registros];
+
   if (campo.toLowerCase().includes('fecha ingreso')) {
+    // Ordenar fechas descendente
+    lista.sort((a, b) => new Date(b[campo] || 0) - new Date(a[campo] || 0));
+  } else if (!camposMoneda.includes(campo)) {
+    // Ordenar alfabéticamente (ignorando mayúsculas/minúsculas)
     lista.sort((a, b) => {
-      const da = new Date(a[campo] || 0);
-      const db = new Date(b[campo] || 0);
-      return db - da;
+      const va = (a[campo] || '').toString().toLowerCase();
+      const vb = (b[campo] || '').toString().toLowerCase();
+      return va.localeCompare(vb, 'es');
     });
   }
+  // Si es campo monetario, no se ordena
+
   mostrarResultados(lista);
 };
 
