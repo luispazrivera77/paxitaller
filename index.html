@@ -25,6 +25,7 @@
 <div id="menu">
   <h3>Filtrar por</h3>
   <select id="filterField"></select>
+  <button id="viewAllBtn" style="margin-top:10px;">Ver registros ingresados</button>
   <p style="margin-top:20px;">Desarrollado por LPaz</p>
 </div>
 
@@ -46,6 +47,7 @@ const camposExtra = ["RUT","Teléfono","Correo","Dirección","Marca","Modelo","A
 
 document.getElementById('menuToggle').onclick = () => document.getElementById('menu').classList.toggle('open');
 document.getElementById('newRecordBtn').onclick = () => mostrarFormulario(camposBase, null);
+document.getElementById('viewAllBtn').onclick = () => mostrarResultados(registros);
 
 function mostrarFormulario(campos, idx) {
   const form = document.getElementById('formContainer');
@@ -82,6 +84,10 @@ function mostrarFormulario(campos, idx) {
 function mostrarResultados(lista) {
   const cont = document.getElementById('results');
   cont.innerHTML = '';
+  if(lista.length === 0) {
+    cont.innerHTML = '<p>No hay registros para mostrar.</p>';
+    return;
+  }
   lista.forEach((reg, idx) => {
     const div = document.createElement('div');
     div.className = 'record';
@@ -138,8 +144,19 @@ function elegirCamposExtra(idx) {
 
 document.getElementById('search').oninput = e => {
   const term = e.target.value.toLowerCase();
-  if(!term) { document.getElementById('results').innerHTML = ''; return; }
-  const results = registros.filter(r => Object.values(r).some(val => val && val.toString().toLowerCase().includes(term)));
+  if (registros.length === 0) {
+    document.getElementById('results').innerHTML = '<p>No hay registros.</p>';
+    return;
+  }
+  if (!term) {
+    mostrarResultados(registros);
+    return;
+  }
+  const results = registros.filter(r =>
+    Object.values(r).some(val =>
+      val && val.toString().toLowerCase().includes(term)
+    )
+  );
   mostrarResultados(results);
 };
 
