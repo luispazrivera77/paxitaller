@@ -229,11 +229,18 @@ filterField.onchange = () => {
       formContainer.appendChild(p);
     } else {
       disponibles.forEach(campo => {
-        const line = document.createElement('div');
-        const chk = document.createElement('input'); chk.type = 'checkbox'; chk.value = campo; chk.id = 'fld_' + campo;
-        const lbl = document.createElement('label'); lbl.textContent = ' ' + campo; lbl.htmlFor = chk.id;
-        line.appendChild(chk); line.appendChild(lbl);
-        formContainer.appendChild(line);
+const line = document.createElement('div');
+line.className = 'extra-field'; // clase para el estilo
+const chk = document.createElement('input');
+chk.type = 'checkbox';
+chk.value = campo;
+chk.id = 'fld_' + campo;
+const lbl = document.createElement('label');
+lbl.textContent = campo;
+lbl.htmlFor = chk.id;
+line.appendChild(chk);
+line.appendChild(lbl);
+formContainer.appendChild(line);
       });
     }
 
