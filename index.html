@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MI TALLER MECÁNICO</title>
+<style>
+  body {
+    background-color: #0a0a0a;
+    color: #b0bec5;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    text-align: center;
+    padding: 20px;
+    background-color: #0d1b2a;
+  }
+  h1 { margin: 0; color: #00bcd4; }
+  main { padding: 20px; max-width: 800px; margin: auto; }
+  input, select {
+    background-color: #0d1b2a;
+    border: 1px solid #00bcd4;
+    color: white;
+    padding: 8px;
+    margin: 5px 0;
+    width: 100%;
+  }
+  button {
+    background-color: #00bcd4;
+    border: none;
+    padding: 8px 12px;
+    color: white;
+    cursor: pointer;
+    margin: 5px 0;
+  }
+  button:hover { background-color: #0097a7; }
+  .record { border: 1px solid #00bcd4; padding: 10px; margin: 10px 0; }
+  #menu {
+    position: fixed;
+    top: 0; left: 0;
+    background-color: #0d1b2a;
+    height: 100%;
+    width: 250px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    padding: 20px;
+  }
+  #menu.open { transform: translateX(0); }
+  #menuToggle {
+    position: fixed;
+    top: 10px; left: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #00bcd4;
+    cursor: pointer;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<button id="menuToggle">☰</button>
+<div id="menu">
+  <h3>Filtrar por</h3>
+  <select id="filterField"></select>
+  <p style="margin-top:20px;">Desarrollado por LPaz</p>
+</div>
+
+<header>
+  <h1>MI TALLER MECÁNICO</h1>
+</header>
+
+<main>
+  <input type="text" id="search" placeholder="Buscar registro...">
+  <button id="newRecordBtn">Nuevo registro</button>
+  <div id="formContainer" class="hidden"></div>
+  <div id="results"></div>
+</main>
+
+<script>
+const registros = [];
+const camposBase = ["Cliente","Trabajo","Fecha ingreso","Presupuesto total"];
+const camposExtra = ["RUT","Teléfono","Correo","Dirección","Marca","Modelo","Año","Patente","N° chasis/VIN","Kilometraje","Color","Combustible","Transmisión","Repuestos","Descripción falla","Diagnóstico","Trabajos a realizar","Costo repuestos","Costo mano de obra","Observaciones","Fecha entrega","Estado trabajo","Abono","Saldo pendiente","Forma de pago","Fecha pago","Garantía","Notas internas"];
+
+const menu = document.getElementById('menu');
+document.getElementById('menuToggle').onclick = () => menu.classList.toggle('open');
+
+document.getElementById('newRecordBtn').onclick = () => mostrarFormulario(camposBase);
+
+function mostrarFormulario(campos) {
+  const form = document.getElementById('formContainer');
+  form.innerHTML = '';
+  campos.forEach(campo => {
+    const input = document.createElement('input');
+    input.placeholder = campo;
+    input.dataset.campo = campo;
+    if(campo.toLowerCase().includes('costo') || campo.toLowerCase().includes('presupuesto') || campo.toLowerCase().includes('abono') || campo.toLowerCase().includes('saldo'))
+      input.type = 'number';
+    form.appendChild(input);
+  });
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Guardar';
+  saveBtn.onclick = () => {
+    const registro = {};
+    form.querySelectorAll('input').forEach(inp => registro[inp.dataset.campo] = inp.value);
+    if(campos === camposBase) {
+      if(confirm("¿Desea agregar más campos?")) {
+        elegirCamposExtra(registro);
+      } else {
+        registros.push(registro);
+        form.classList.add('hidden');
+      }
+    } else {
+      registros.push(registro);
+      form.classList.add('hidden');
+    }
+    actualizarFiltro();
+  };
+  form.appendChild(saveBtn);
+  form.classList.remove('hidden');
+}
+
+function elegirCamposExtra(registro) {
+  const form = document.getElementById('formContainer');
+  form.innerHTML = '<p>Seleccione campos adicionales:</p>';
+  camposExtra.forEach(campo => {
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.value = campo;
+    const lbl = document.createElement('label');
+    lbl.textContent = campo;
+    form.appendChild(chk);
+    form.appendChild(lbl);
+    form.appendChild(document.createElement('br'));
+  });
+  const addBtn = document.createElement('button');
+  addBtn.textContent = 'Agregar seleccionados';
+  addBtn.onclick = () => {
+    const seleccionados = Array.from(form.querySelectorAll('input[type=checkbox]:checked')).map(c => c.value);
+    mostrarFormulario([...camposBase, ...seleccionados]);
+  };
+  form.appendChild(addBtn);
+}
+
+document.getElementById('search').oninput = e => {
+  const term = e.target.value.toLowerCase();
+  const results = registros.filter(r => Object.values(r).some(val => val.toLowerCase().includes(term)));
+  mostrarResultados(results);
+};
+
+function mostrarResultados(lista) {
+  const cont = document.getElementById('results');
+  cont.innerHTML = '';
+  lista.forEach((reg, idx) => {
+    const div = document.createElement('div');
+    div.className = 'record';
+    div.innerHTML = Object.entries(reg).map(([k,v]) => `<strong>${k}:</strong> ${v}`).join('<br>');
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Editar';
+    editBtn.onclick = () => editarRegistro(idx);
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Eliminar';
+    delBtn.onclick = () => { registros.splice(idx,1); mostrarResultados(registros); };
+    const addFieldBtn = document.createElement('button');
+    addFieldBtn.textContent = 'Agregar campos';
+    addFieldBtn.onclick = () => agregarCampos(idx);
+    div.appendChild(document.createElement('br'));
+    div.appendChild(editBtn);
+    div.appendChild(delBtn);
+    div.appendChild(addFieldBtn);
+    cont.appendChild(div);
+  });
+}
+
+function editarRegistro(idx) {
+  const reg = registros[idx];
+  mostrarFormulario(Object.keys(reg));
+  const form = document.getElementById('formContainer');
+  form.querySelectorAll('input').forEach(inp => inp.value = reg[inp.dataset.campo] || '');
+  form.querySelector('button').onclick = () => {
+    form.querySelectorAll('input').forEach(inp => reg[inp.dataset.campo] = inp.value);
+    form.classList.add('hidden');
+    mostrarResultados(registros);
+  };
+}
+
+function agregarCampos(idx) {
+  const reg = registros[idx];
+  const disponibles = camposExtra.filter(c => !(c in reg));
+  const seleccionados = prompt("Ingrese campos a agregar separados por coma:\n" + disponibles.join(", "));
+  if(seleccionados) {
+    seleccionados.split(',').map(c => c.trim()).forEach(campo => reg[campo] = '');
+    editarRegistro(idx);
+  }
+}
+
+function actualizarFiltro() {
+  const sel = document.getElementById('filterField');
+  sel.innerHTML = '';
+  const campos = new Set();
+  registros.forEach(r => Object.keys(r).forEach(k => campos.add(k)));
+  campos.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+</script>
+</body>
+</html>
