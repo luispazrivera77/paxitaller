@@ -95,6 +95,10 @@
   const viewAllBtn = document.getElementById('viewAllBtn');
   const newRecordBtn = document.getElementById('newRecordBtn');
   const search = document.getElementById('search');
+  // Al hacer clic o enfocar el buscador, limpiar pantalla
+search.onfocus = () => {
+  results.innerHTML = '';
+};
   const formContainer = document.getElementById('formContainer');
   const results = document.getElementById('results');
 
