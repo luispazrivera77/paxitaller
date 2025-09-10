@@ -15,7 +15,19 @@
   }
   * { box-sizing: border-box; }
   body { background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; }
-  header { text-align: center; padding: 20px; background-color: var(--panel); }
+  header {
+  display: flex;
+  flex-direction: column; /* Coloca el botón y el título en columna */
+  align-items: center;    /* Centra horizontalmente el contenido */
+  padding: 20px;
+  background-color: var(--panel);
+}
+
+#menuToggle {
+  align-self: flex-start; /* Mueve el botón a la izquierda */
+  margin-bottom: 10px;    /* Espacio entre el botón y el título */
+}
+
   h1 { margin: 0; color: var(--accent); font-weight: 600; }
   main { padding: 20px; max-width: 960px; margin: auto; }
   input, select, textarea {
