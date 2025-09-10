@@ -230,17 +230,19 @@ filterField.onchange = () => {
     } else {
       disponibles.forEach(campo => {
 const line = document.createElement('div');
-line.className = 'extra-field'; // Aplica el estilo que creamos
-const chk = document.createElement('input');
-chk.type = 'checkbox';
-chk.value = campo;
-chk.id = 'fld_' + campo;
-const lbl = document.createElement('label');
-lbl.textContent = campo;
-lbl.htmlFor = chk.id;
-line.appendChild(chk);
-line.appendChild(lbl);
-formContainer.appendChild(line);
+  line.className = 'extra-field'; // 👈 aquí le damos la clase para aplicar el CSS
+  const chk = document.createElement('input');
+  chk.type = 'checkbox';
+  chk.value = campo;
+  chk.id = 'fld_' + campo;
+  const lbl = document.createElement('label');
+  lbl.textContent = campo;
+  lbl.htmlFor = chk.id;
+  line.appendChild(chk);
+  line.appendChild(lbl);
+  formContainer.appendChild(line);
+});
+
       });
     }
 
