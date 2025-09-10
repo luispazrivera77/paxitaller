@@ -52,12 +52,11 @@
 <body>
 
 <button id="menuToggle">☰ Menú</button>
-<aside id="menu" aria-label="Menú lateral">
-  <h3 style="margin:0 0 10px;">Filtrar por campo</h3>
-  <select id="filterField" title="Campo para filtrar"></select>
+<aside id="menu">
+  <button id="closeMenuBtn" class="secondary" style="margin-bottom:10px;">⮜ Cerrar</button>
+  <h3>Filtrar por campo</h3>
+  <select id="filterField"></select>
   <button id="viewAllBtn" style="margin-top:10px;">Ver registros ingresados</button>
-  <p class="hint">El buscador muestra resultados mientras escribes. En vacío, no se muestran registros.</p>
-  <hr style="border-color:#114; opacity:.3;">
   <p style="margin-top:14px;">Desarrollado por LPaz</p>
 </aside>
 
@@ -91,6 +90,7 @@
   // Elementos UI
   const menu = document.getElementById('menu');
   const menuToggle = document.getElementById('menuToggle');
+  const closeMenuBtn = document.getElementById('closeMenuBtn');
   const filterField = document.getElementById('filterField');
   const viewAllBtn = document.getElementById('viewAllBtn');
   const newRecordBtn = document.getElementById('newRecordBtn');
@@ -126,6 +126,7 @@ filterField.onchange = () => {
 
   // Eventos UI base
   menuToggle.onclick = () => menu.classList.toggle('open');
+  closeMenuBtn.onclick = () => menu.classList.remove('open');
   viewAllBtn.onclick = () => mostrarResultados(registros);
   newRecordBtn.onclick = () => {
   results.innerHTML = ''; // Limpia la pantalla
